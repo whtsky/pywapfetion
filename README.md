@@ -12,3 +12,5 @@ PyWapFetion是一个飞信的Python模块，使用Wap飞信协议。
 
 直接import就可以用，参考example.py  
 或者可以运行：`python setup.py install`
+
+forked by jybox
