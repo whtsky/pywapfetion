@@ -1,5 +1,5 @@
 *.pyc
-*.svn
+.svn
 *.cache
 test.py
 PyWapFetion.egg-info/
