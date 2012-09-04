@@ -8,7 +8,7 @@ from Errors import *
 from re import compile
 from Cache import Cache
 from gzip import GzipFile
-from pickle import dump, load
+#from pickle import dump, load
 try:
     from cStringIO import StringIO
 except:
@@ -91,8 +91,9 @@ class Fetion(object):
             {'nickname': name, 'number': phone, 'type': '0'})
         return '成功' in htm
 
-    def alive(self):        
-        return '正在登录' in self.open('im/index/indexcenter.action')
+    def alive(self):     
+        html = self.open('im/index/indexcenter.action')
+        return '心情' in  html or '正在登录' in html
 
     def deletefriend(self, id):
         htm = self.open('im/user/deletefriendsubmit.action?touserid=%s' % id)
