@@ -1,4 +1,5 @@
 *.pyc
+*.svn
 *.cache
 test.py
 PyWapFetion.egg-info/
@@ -9,6 +10,7 @@ dist/
 *.tar.gz
 *.jpeg
 *.cookies
+
 
 #OS X
 .DS_Store

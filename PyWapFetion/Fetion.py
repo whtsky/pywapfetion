@@ -18,6 +18,7 @@ idfinder = compile('touserid=(\d*)')
 idfinder2 = compile('name="internalid" value="(\d+)"')
 csrf_token = compile('<postfield name="csrfToken" value="(\w+)"/>')
 codekey = compile('<img src="/im5/systemimage/verifycode(.*?).jpeg" alt="f" />')
+markupfinder = compile('<a href="(/im/box/dealOneMessage.action.*?)"')
 
 __all__ = ['Fetion']
 
@@ -115,7 +116,7 @@ class Fetion(object):
         htm = ''
         data = {
             'm': self.mobile,
-            'pass': self.password,
+            'pass': self.password,            
         }
         while '图形验证码错误' in htm or not htm:
             page = self.open('/im5/login/loginHtml5.action')
@@ -178,3 +179,18 @@ class Fetion(object):
         except IndexError:
             print htm
             raise FetionCsrfTokenFail
+            
+    
+    def isfriend(self,mobile):
+        '''判断手机号是否为好友'''
+        html = self.open('im/index/searchOtherInfoList.action',{'searchText':mobile})
+        return '与TA聊' in html            
+
+    def markannounce(self):
+        '''标记烦人的系统通知为已读，不然这些通知将频繁发送到手机，返回标记消息数'''
+        html = self.open('im/box/notNeedDealSystemList.action')
+        try:
+            urls =markupfinder.findall(html)
+        except IndexError: 
+            return 0
+        return len([self.open(url) for url in urls])         
