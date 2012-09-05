@@ -71,7 +71,7 @@ Status = raw_input()
 Status = '4' if Status is '' or (Status.isdigit() and 0<int(2)<5) else Stauts
 try:
     User = Fetion(Phone,Password,Status)
-except:
+except:    
     printl('用户名或密码错误。')
     exit()
     

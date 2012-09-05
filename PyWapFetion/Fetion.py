@@ -18,7 +18,7 @@ idfinder = compile('touserid=(\d*)')
 idfinder2 = compile('name="internalid" value="(\d+)"')
 csrf_token = compile('<postfield name="csrfToken" value="(\w+)"/>')
 codekey = compile('<img src="/im5/systemimage/verifycode(.*?).jpeg" alt="f" />')
-markupfinder = compile('<a href="(/im/box/dealOneMessage.action.*?)"')
+announcesfinder = compile('<a href="(/im/box/dealOneMessage.action.*?)"')
 
 __all__ = ['Fetion']
 
@@ -68,8 +68,8 @@ class Fetion(object):
             HTTPHandler)
         self.mobile, self.password = mobile, password
         if not self.alive():
-            self._login()
-        cookiejar.save()            
+            if self._login(): cookiejar.save()
+
         #dump(cookie_processor, open(cookiesfile, 'wb'))        
         self.changestatus(status)
 
@@ -93,8 +93,8 @@ class Fetion(object):
         return '成功' in htm
 
     def alive(self):     
-        html = self.open('im/index/indexcenter.action')
-        return '心情' in  html or '正在登录' in html
+        htm = self.open('im/index/indexcenter.action')
+        return '心情' in  htm or '正在登录' in htm
 
     def deletefriend(self, id):
         htm = self.open('im/user/deletefriendsubmit.action?touserid=%s' % id)
@@ -186,11 +186,11 @@ class Fetion(object):
         html = self.open('im/index/searchOtherInfoList.action',{'searchText':mobile})
         return '与TA聊' in html            
 
-    def markannounce(self):
-        '''标记烦人的系统通知为已读，不然这些通知将频繁发送到手机，返回标记消息数'''
+    def markannounces(self):
+        '''标记烦人的系统通知为已读，不然这些通知将频繁周期性地发送到手机，返回标记消息数'''
         html = self.open('im/box/notNeedDealSystemList.action')
         try:
-            urls =markupfinder.findall(html)
+            urls =announcesfinder.findall(html)
         except IndexError: 
             return 0
         return len([self.open(url) for url in urls])         
