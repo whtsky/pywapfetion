@@ -1,17 +1,13 @@
-#coding=utf-8
-from cookielib import MozillaCookieJar
-from urllib2 import Request, build_opener, HTTPHandler, HTTPCookieProcessor
-from urllib import urlencode
+from http.cookiejar import MozillaCookieJar
+from urllib import request, parse
 import base64
 import os
-from Errors import *
+from PyWapFetion.Errors import *
 from re import compile
-from Cache import Cache
+from PyWapFetion.Cache import Cache
 from gzip import GzipFile
-try:
-    from cStringIO import StringIO
-except:
-    from StringIO import StringIO
+
+from io import StringIO
 
 idfinder = compile('touserid=(\d*)')
 idfinder2 = compile('name="internalid" value="(\d+)"')
@@ -23,7 +19,7 @@ __all__ = ['Fetion']
 
 class Fetion(object):
     def __init__(self, mobile, password=None, status='0',
-        cachefile='Fetion.cache', cookiesfile=''):
+                 cachefile='Fetion.cache', cookiesfile=''):
         '''登录状态：
         在线：400 隐身：0 忙碌：600 离开：100
         '''
@@ -39,10 +35,9 @@ class Fetion(object):
 
         cookiejar.load(filename=cookiesfile)
 
-        cookie_processor = HTTPCookieProcessor(cookiejar)
+        cookie_processor = request.HTTPCookieProcessor(cookiejar)
 
-        self.opener = build_opener(cookie_processor,
-            HTTPHandler)
+        self.opener = request.build_opener(cookie_processor)
         self.mobile, self.password = mobile, password
         if not self.alive():
             self._login()
@@ -53,10 +48,10 @@ class Fetion(object):
     def send2self(self, message, time=None):
         if time:
             htm = self.open('im/user/sendTimingMsgToMyselfs.action',
-                {'msg': message, 'timing': time})
+                            {'msg': message, 'timing': time})
         else:
             htm = self.open('im/user/sendMsgToMyselfs.action',
-                {'msg': message})
+                            {'msg': message})
         return '成功' in htm
 
     def send(self, mobile, message, sm=False):
@@ -66,7 +61,7 @@ class Fetion(object):
 
     def addfriend(self, mobile, name='xx'):
         htm = self.open('im/user/insertfriendsubmit.action',
-            {'nickname': name, 'number': mobile, 'type': '0'})
+                        {'nickname': name, 'number': mobile, 'type': '0'})
         return '成功' in htm
 
     def alive(self):
@@ -102,7 +97,7 @@ class Fetion(object):
                 captcha = matches[0]
                 img = self.open('/im5/systemimage/verifycode%s.jpeg' % captcha)
                 open('verifycode.jpeg', 'wb').write(img)
-                captchacode = raw_input('captchaCode:')
+                captchacode = input('captchaCode:')
                 data['captchaCode'] = captchacode
             htm = self.open('/im5/login/loginHtml5.action', data)
         self.alive()
@@ -113,14 +108,14 @@ class Fetion(object):
         if sm:
             url = 'im/chat/sendMsg.action?touserid=%s' % id
         htm = self.open(url,
-            {'msg': message, 'csrfToken': self._getcsrf(id)})
+                        {'msg': message, 'csrfToken': self._getcsrf(id)})
         if '对方不是您的好友' in htm:
             raise FetionNotYourFriend
         return '成功' in htm
 
     def _getid(self, mobile):
         htm = self.open('im/index/searchOtherInfoList.action',
-            {'searchText': mobile})
+                        {'searchText': mobile})
         try:
             return idfinder.findall(htm)[0]
         except IndexError:
@@ -139,13 +134,15 @@ class Fetion(object):
             return id
         return self._getid(mobile)
 
-    def open(self, url, data=''):
-        request = Request('http://f.10086.cn/%s' % url, data=urlencode(data))
-        htm = self.opener.open(request).read()
+    def open(self, url, data=None):
+        if (data != None):
+            data = parse.urlencode(data).encode()
+        resp = self.opener.open('http://f.10086.cn/%s' % url, data)
+        htm = resp.read()
         try:
             htm = GzipFile(fileobj=StringIO(htm)).read()
         finally:
-            return htm
+            return htm.decode()
 
     def _getcsrf(self, id=''):
         if hasattr(self, 'csrf'):
@@ -156,5 +153,5 @@ class Fetion(object):
             self.csrf = csrf_token.findall(htm)[0]
             return self.csrf
         except IndexError:
-            print htm
+            print(htm)
             raise FetionCsrfTokenFail
